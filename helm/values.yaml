@@ -1,0 +1,7 @@
+nameOverride: webapp
+fullnameOverride: webapp
+image:
+  repository: cptmeh/webapp
+
+service:
+  port: 8080
