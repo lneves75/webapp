@@ -43,14 +43,14 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ steps.image.outputs.tag }}
 
       - name: Checkout Argo Apps
-        # if: github.event_name == 'push'
+        if: github.event_name == 'push'
         uses: actions/checkout@v4
         with:
           repository: lneves75/argocd-apps
-          token: ${{ secrets.gitops_token }}
+          token: ${{ secrets.GITOPS_TOKEN }}
 
-      - name: Get the current tag
-        id: current
+      - name: Set tag for environment
+        if: github.event_name == 'push'
         working-directory: apps
         env:
           env: "uat"
@@ -58,7 +58,6 @@ jobs:
           tagExp: ".spec.generators[0].matrix.generators[0].list.elements[env(envIndex)].tag"
         run: |
           export envIndex=$(yq 'eval(env(envIndexExp))' ${{ env.APP }}.yaml)
-          echo "tag=$(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)" >> $GITHUB_OUTPUT
-
-      - name: Output current tag
-        run: echo "${{ steps.current.outputs.tag }}"
+          echo "Current tag: $(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)"
+          yq 'eval(env(tagExp)) = "${{ steps.image.outputs.tag }}"' -i ${{ env.APP }}.yaml
+          git diff ${{ env.APP }}.yaml
