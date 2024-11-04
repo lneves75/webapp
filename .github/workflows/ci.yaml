@@ -43,7 +43,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ steps.image.outputs.tag }}
 
       - name: Checkout Argo Apps
-        if: github.event_name == 'push'
+        # if: github.event_name == 'push'
         uses: actions/checkout@v4
         with:
           repository: lneves75/argocd-apps
