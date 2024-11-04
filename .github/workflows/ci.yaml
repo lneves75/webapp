@@ -53,7 +53,7 @@ jobs:
         id: current
         working-directory: apps
         run: |
-          echo "tag=$(yq '.spec.generators[].matrix.generators[].list.elements[] | select(.namespace == \"staging\"') | key' ${{ env.APP }}.yaml" >> $GITHUB_OUTPUT
+          echo "tag=$(yq '.spec.generators[].matrix.generators[].list.elements[] | select(.namespace == "staging"') | key' ${{ env.APP }}.yaml" >> $GITHUB_OUTPUT
 
       - name: Output current tag
         run: echo "${{ steps.current.outputs.tag }}"
