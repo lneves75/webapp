@@ -51,7 +51,6 @@ jobs:
 
       - name: Get the current tag
         id: current
-        if: github.event_name == 'push'
         working-directory: apps
         run: |
           echo "tag=$(yq '.spec.generators[].matrix.generators[].list.elements[] | select(.namespace == \"staging\"') | key' ${{ env.APP }}.yaml" >> $GITHUB_OUTPUT
