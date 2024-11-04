@@ -6,10 +6,12 @@ on:
       - master
   pull_request: 
 
+env:
+  APP: webapp
+
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -38,7 +40,21 @@ jobs:
            COMMIT_HASH=${{ steps.image.outputs.tag }}
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/webapp:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/webapp:${{ steps.image.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ steps.image.outputs.tag }}
 
+      - name: Checkout Argo Apps
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+        with:
+          repository: lneves75/argocd-apps
+          token: ${{ secrets.gitops_token }}
 
+      - name: Get the current tag
+        id: current
+        if: github.event_name == 'push'
+        working-directory: apps
+        run: |
+          echo "tag=$(yq '.spec.generators[].matrix.generators[].list.elements[] | select(.namespace == \"staging\"') | key' ${{ env.APP }}.yaml" >> $GITHUB_OUTPUT
+
+      - name: Output current tag
+        run: echo "${{ steps.current.outputs.tag }}"
