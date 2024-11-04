@@ -52,8 +52,12 @@ jobs:
       - name: Get the current tag
         id: current
         working-directory: apps
+        env:
+          env: "uat"
+          envIndexExp: ".spec.generators[0].matrix.generators[0].list.elements[] | select(.environment == strenv(env)) | key"
+          tagExp: ".spec.generators[0].matrix.generators[0].list.elements[env(envIndexExp)].tag"
         run: |
-          echo "tag=$(yq '.spec.generators[].matrix.generators[].list.elements[] | select(.namespace == "staging"') | key' ${{ env.APP }}.yaml)" >> $GITHUB_OUTPUT
+          echo "tag=$(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)" >> $GITHUB_OUTPUT
 
       - name: Output current tag
         run: echo "${{ steps.current.outputs.tag }}"
