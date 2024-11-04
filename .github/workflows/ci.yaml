@@ -54,9 +54,10 @@ jobs:
         working-directory: apps
         env:
           env: "uat"
-          envIndexExp: ".spec.generators[0].matrix.generators[0].list.elements[] | select(.environment == strenv(env)) | key"
-          tagExp: ".spec.generators[0].matrix.generators[0].list.elements[env(envIndexExp)].tag"
+          envIndexExp: ".spec.generators[0].matrix.generators[0].list.elements[] | select(.environment == env(env)) | key"
+          tagExp: ".spec.generators[0].matrix.generators[0].list.elements[env(envIndex)].tag"
         run: |
+          export envIndex=$(yq 'eval(env(envIndexExp))' ${{ env.APP }}.yaml)
           echo "tag=$(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)" >> $GITHUB_OUTPUT
 
       - name: Output current tag
