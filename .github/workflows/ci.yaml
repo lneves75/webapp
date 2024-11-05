@@ -45,7 +45,7 @@ jobs:
       - name: Add built label
         if: contains('pull_request', github.event_name)
         env:
-          GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit $(dirname ${{ github.ref_name }}) --add-label "built"
 
       - name: Checkout Argo Apps
