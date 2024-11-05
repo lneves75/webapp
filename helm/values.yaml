@@ -1,5 +1,3 @@
-nameOverride: webapp
-fullnameOverride: webapp
 image:
   repository: cptmeh/webapp
 

@@ -6,11 +6,15 @@ on:
       - master
   pull_request: 
 
+env:
+  APP: webapp
+
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
 
     steps:
       - name: Get image tag
@@ -38,7 +42,57 @@ jobs:
            COMMIT_HASH=${{ steps.image.outputs.tag }}
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/webapp:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/webapp:${{ steps.image.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ steps.image.outputs.tag }}
 
+      - name: Add built label
+        if: contains('pull_request', github.event_name)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr edit $(dirname ${{ github.ref_name }}) --add-label "built"
 
+      - name: Checkout Argo Apps
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+        with:
+          repository: lneves75/argocd-apps
+          token: ${{ secrets.GITOPS_TOKEN }}
+
+      - name: Set tag for environment
+        if: github.event_name == 'push'
+        working-directory: apps
+        env:
+          environment: "staging"
+          envIndexExp: ".spec.generators[0].matrix.generators[0].list.elements[] | select(.environment == env(environment)) | key"
+          tagExp: ".spec.generators[0].matrix.generators[0].list.elements[env(envIndex)].tag"
+        run: |
+          export envIndex=$(yq 'eval(env(envIndexExp))' ${{ env.APP }}.yaml)
+          echo "Current tag: $(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)"
+          yq 'eval(env(tagExp)) = "${{ steps.image.outputs.tag }}"' -i ${{ env.APP }}.yaml
+          git diff ${{ env.APP }}.yaml
+
+      - name: Commit changes to git
+        if: github.event_name == 'push'
+        env:
+          environment: "staging"
+        run: |
+          if [ $(git status --short | wc -l) -gt 0 ]; then
+            commit_message="${{ env.APP }}[${{ steps.image.outputs.tag }}] deployed to ${{ env.environment }}"
+            git config user.name lneves75
+            git config user.email luis.neves@on.com
+            git add apps/${{ env.APP }}.yaml
+            git commit -m "${commit_message}" -m"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            echo "No changes to commit" >> $GITHUB_STEP_SUMMARY
+          fi
+  
+      - name: Rebase and push new commits.
+        if: github.event_name == 'push'
+        uses: nick-fields/retry@v3
+        with:
+          retry_on: error
+          max_attempts: 3
+          timeout_seconds: 15
+          command: |
+            git remote add origin https://github.com/lneves75/argocd-apps.git
+            git pull --rebase origin master && \
+            git push
