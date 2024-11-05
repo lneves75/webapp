@@ -53,11 +53,37 @@ jobs:
         # if: github.event_name == 'push'
         working-directory: apps
         env:
-          env: "uat"
-          envIndexExp: ".spec.generators[0].matrix.generators[0].list.elements[] | select(.environment == env(env)) | key"
+          environment: "staging"
+          envIndexExp: ".spec.generators[0].matrix.generators[0].list.elements[] | select(.environment == env(environment)) | key"
           tagExp: ".spec.generators[0].matrix.generators[0].list.elements[env(envIndex)].tag"
         run: |
           export envIndex=$(yq 'eval(env(envIndexExp))' ${{ env.APP }}.yaml)
           echo "Current tag: $(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)"
           yq 'eval(env(tagExp)) = "${{ steps.image.outputs.tag }}"' -i ${{ env.APP }}.yaml
           git diff ${{ env.APP }}.yaml
+
+      - name: Commit changes to git
+        env:
+          environment: "staging"
+        run: |
+          if [ $(git status --short | wc -l) -gt 0 ]; then
+            commit_message="${{ env.APP }}[${{ steps.image.outputs.tag }}] deployed to ${{ env.environment }}"
+            git config user.name lneves75
+            git config user.email luis.neves@on.com
+            git add apps/${{ env.APP }}.yaml
+            git commit --message "${commit_message}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            echo "No changes to commit" >> $GITHUB_STEP_SUMMARY
+          fi
+  
+      # The retry helps in combination with the 'git pull --rebase' if the push is rejected.
+      - name: Rebase and push new commits.
+        uses: nick-fields/retry@v3
+        with:
+          retry_on: error
+          max_attempts: 3
+          timeout_seconds: 15
+          command: |
+            git remote add origin https://github.com/lneves75/argocd-apps.git
+            git pull --rebase origin master && \
+            git push
