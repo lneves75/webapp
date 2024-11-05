@@ -42,6 +42,10 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ steps.image.outputs.tag }}
 
+      - name: Add built label
+        if: contains('pull_request', github.event_name)
+        run: gh pr edit $(dirname ${{ github.ref_name }}) --add-label "built"
+
       - name: Checkout Argo Apps
         if: github.event_name == 'push'
         uses: actions/checkout@v4
