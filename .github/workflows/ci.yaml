@@ -43,14 +43,14 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ steps.image.outputs.tag }}
 
       - name: Checkout Argo Apps
-        # if: github.event_name == 'push'
+        if: github.event_name == 'push'
         uses: actions/checkout@v4
         with:
           repository: lneves75/argocd-apps
           token: ${{ secrets.GITOPS_TOKEN }}
 
       - name: Set tag for environment
-        # if: github.event_name == 'push'
+        if: github.event_name == 'push'
         working-directory: apps
         env:
           environment: "staging"
@@ -63,6 +63,7 @@ jobs:
           git diff ${{ env.APP }}.yaml
 
       - name: Commit changes to git
+        if: github.event_name == 'push'
         env:
           environment: "staging"
         run: |
@@ -71,13 +72,13 @@ jobs:
             git config user.name lneves75
             git config user.email luis.neves@on.com
             git add apps/${{ env.APP }}.yaml
-            git commit --message "${commit_message}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            git commit -m "${commit_message}" -m"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           else
             echo "No changes to commit" >> $GITHUB_STEP_SUMMARY
           fi
   
-      # The retry helps in combination with the 'git pull --rebase' if the push is rejected.
       - name: Rebase and push new commits.
+        if: github.event_name == 'push'
         uses: nick-fields/retry@v3
         with:
           retry_on: error
