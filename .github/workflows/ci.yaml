@@ -51,12 +51,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit $(dirname ${{ github.ref_name }}) --add-label "built"
 
+      - name: Get tag number
+        id: tag
+        run: |
+          echo "number=staging-$((${{ github.run_number }}+${{ github.run_attempt }}-1))" >> $GITHUB_OUTPUT
+
       # here we should configure which tags are automatically created when we push to the default branch
       - name: Create tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        env:
-          GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
-        run: |
-          tag=staging-$((${{ github.run_number }}+${{ github.run_attempt }}-1))
-          git tag ${tag}
-          git push origin tag ${tag}
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITOPS_TOKEN }}
+          tag_prefix: staging-
+          custom_tag: ${{ steps.tag.outputs.number }}
