@@ -39,13 +39,14 @@ jobs:
         run: |
           export envIndex=$(yq 'eval(env(envIndexExp))' ${{ env.APP }}.yaml)
           echo "Current tag: $(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)"
+          echo "New tag: ${{ github.sha }}"
           yq 'eval(env(tagExp)) = "${{ github.sha }}"' -i ${{ env.APP }}.yaml
           git diff ${{ env.APP }}.yaml
 
       - name: Commit changes to git
         if: github.event_name == 'push'
         env:
-          environment: "staging"
+          environment: ${{ steps.environment.outputs.name }}
         run: |
           if [ $(git status --short | wc -l) -gt 0 ]; then
             commit_message="${{ env.APP }}[${{ github.sha }}] deployed to ${{ env.environment }}"
