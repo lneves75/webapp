@@ -39,7 +39,7 @@ jobs:
         run: |
           export envIndex=$(yq 'eval(env(envIndexExp))' ${{ env.APP }}.yaml)
           echo "Current tag: $(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)"
-          yq 'eval(env(tagExp)) = "${{ steps.image.outputs.tag }}"' -i ${{ env.APP }}.yaml
+          yq 'eval(env(tagExp)) = "${{ github.sha }}"' -i ${{ env.APP }}.yaml
           git diff ${{ env.APP }}.yaml
 
       - name: Commit changes to git
@@ -48,7 +48,7 @@ jobs:
           environment: "staging"
         run: |
           if [ $(git status --short | wc -l) -gt 0 ]; then
-            commit_message="${{ env.APP }}[${{ steps.image.outputs.tag }}] deployed to ${{ env.environment }}"
+            commit_message="${{ env.APP }}[${{ github.sha }}] deployed to ${{ env.environment }}"
             git config user.name lneves75
             git config user.email luis.neves@on.com
             git add apps/${{ env.APP }}.yaml
