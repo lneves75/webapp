@@ -33,23 +33,18 @@ jobs:
         if: github.event_name == 'push'
         working-directory: apps
         env:
-          environment: ${{ steps.environment.outputs.name }}
-          envIndexExp: ".spec.generators[0].matrix.generators[0].list.elements[] | select(.environment == env(environment)) | key"
-          tagExp: ".spec.generators[0].matrix.generators[0].list.elements[env(envIndex)].tag"
+          target: ${{ steps.environment.outputs.name }}/${{ env.APP }}.yaml
         run: |
-          export envIndex=$(yq 'eval(env(envIndexExp))' ${{ env.APP }}.yaml)
-          echo "Current tag: $(yq 'eval(env(tagExp))' ${{ env.APP }}.yaml)"
+          echo "Current tag: $(yq eval '.tag' ${{ env.target }})"
           echo "New tag: ${{ github.sha }}"
-          yq 'eval(env(tagExp)) = "${{ github.sha }}"' -i ${{ env.APP }}.yaml
-          git diff ${{ env.APP }}.yaml
+          yq eval '.tag = "${{ github.sha }}"' -i ${{ env.target }}
+          git diff ${{ env.target }}
 
       - name: Commit changes to git
         if: github.event_name == 'push'
-        env:
-          environment: ${{ steps.environment.outputs.name }}
         run: |
           if [ $(git status --short | wc -l) -gt 0 ]; then
-            commit_message="${{ env.APP }}[${{ github.sha }}] deployed to ${{ env.environment }}"
+            commit_message="${{ env.APP }}[${{ github.sha }}] deployed to ${{ steps.environment.outputs.name }}"
             git config user.name lneves75
             git config user.email luis.neves@on.com
             git add apps/${{ env.APP }}.yaml
