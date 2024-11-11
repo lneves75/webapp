@@ -56,5 +56,4 @@ jobs:
         run: |
           tag=staging-$((${{ github.run_number }}+${{ github.run_attempt }}-1))
           git tag ${tag}
-          git remote add origin ${{ github.repositoryUrl }}
           git push origin tag ${tag}
