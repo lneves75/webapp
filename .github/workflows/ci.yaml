@@ -54,7 +54,9 @@ jobs:
       # here we should configure which tags are automatically created when we push to the default branch
       - name: Create tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
         run: |
           tag=staging-$((${{ github.run_number }}+${{ github.run_attempt }}-1))
-          git tag ${tag} ${{ github.sha }}
+          git tag ${tag}
           git push origin tag ${tag}
