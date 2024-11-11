@@ -54,7 +54,7 @@ jobs:
       - name: Get tag number
         id: tag
         run: |
-          echo "number=staging-$((${{ github.run_number }}+${{ github.run_attempt }}-1))" >> $GITHUB_OUTPUT
+          echo "number=$((${{ github.run_number }}+${{ github.run_attempt }}-1))" >> $GITHUB_OUTPUT
 
       # here we should configure which tags are automatically created when we push to the default branch
       - name: Create tag
