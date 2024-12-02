@@ -1,5 +1,32 @@
 image:
   repository: cptmeh/webapp
 
+deployment:
+  enabled: true
+  ports:
+  - http:
+      container: 8080
+  resources:
+    requests:
+      cpu: "0.2"
+      memory: "32Mi"
+    limits:
+      cpu: "0.5"
+      memory: "64Mi"
+  probes:
+    livenessProbe:
+      httpGet:
+        path: /
+        port: http
+    readinessProbe:
+      httpGet:
+        path: /
+        port: http
+  securityContext:
+    id: 101
+
 service:
-  port: 8080
+  enabled: true
+
+serviceAccount:
+  enabled: true
