@@ -2,8 +2,9 @@ image:
   repository: cptmeh/webapp
 
 autoscaling:
-  enabled: true
-  targetCPUUtilizationPercentage: 40
+  hpa:
+    enabled: true
+    targetCPUUtilizationPercentage: 40
 
 deployment:
   enabled: true
