@@ -42,12 +42,13 @@ jobs:
 
       - name: Commit changes to git
         if: github.event_name == 'push'
+        working-directory: apps/business
         run: |
           if [ $(git status --short | wc -l) -gt 0 ]; then
             commit_message="${{ env.APP }}[${{ github.sha }}] deployed to ${{ steps.environment.outputs.name }}"
             git config user.name lneves75
             git config user.email luis.neves@on.com
-            git add apps/${{ steps.environment.outputs.name }}/${{ env.APP }}.yaml
+            git ${{ steps.environment.outputs.name }}/${{ env.APP }}.yaml
             git commit -m "${commit_message}" -m"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           else
             echo "No changes to commit" >> $GITHUB_STEP_SUMMARY
