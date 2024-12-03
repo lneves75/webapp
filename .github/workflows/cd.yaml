@@ -31,7 +31,7 @@ jobs:
 
       - name: Set tag for environment
         if: github.event_name == 'push'
-        working-directory: apps
+        working-directory: apps/business
         env:
           target: ${{ steps.environment.outputs.name }}/${{ env.APP }}.yaml
         run: |
