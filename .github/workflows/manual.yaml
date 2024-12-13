@@ -3,9 +3,9 @@ name: Manual
 on:
   workflow_dispatch:
     inputs:
-      commit:
-        description: Commit to deploy
-        required: false
+      build-args:
+        description: build args
+        required: true
         type: string
       environment:
         description: Target environment
@@ -21,7 +21,7 @@ jobs:
     uses: lneves75/gh-workflows/.github/workflows/ci.yaml@test-ci
     with:
       name: webapp
-      build-args: '["COMMIT_HASH=abc"]'
+      build-args: ${{ inputs.build-args }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
