@@ -3,7 +3,7 @@ FROM ubuntu AS stage
 WORKDIR /tmp
 COPY index.html ./index.tpl
 
-ARG COMMIT_HASH=unknown
+ARG COMMIT_HASH=1234567890
 RUN sed 's/__COMMIT_HASH__/'${COMMIT_HASH}'/g' index.tpl > index.html
 
 ARG VERSION
