@@ -18,7 +18,7 @@ on:
 
 jobs:
   build:
-    uses: lneves75/gh-workflows/.github/workflows/ci.yaml@master
+    uses: lneves75/gh-workflows/.github/workflows/ci.yaml@test-ci
     with:
       name: webapp
     secrets:
