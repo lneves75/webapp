@@ -61,7 +61,7 @@ jobs:
   create-tags:
     if: contains('push', github.event_name)
     needs: [git, prepare-tags]
-    uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@test-ci
+    uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@d0fe3061146563da00cf41410c9ece1305e5d8da
     permissions:
       contents: write
     with:
