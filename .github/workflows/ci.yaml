@@ -67,7 +67,7 @@ jobs:
       contents: write
     with:
       service: 'webapp'
-      environment: '["staging"]'
+      environment: '["staging","uat"]'
       version: ${{ needs.get-version.outputs.number }}
       ref: ${{ needs.git.outputs.ref }}
     secrets:

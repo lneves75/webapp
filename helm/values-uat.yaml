@@ -1,1 +1,5 @@
-environment: uat
+argocd:
+  name: webapp
+  project: default
+  cluster: staging-tech
+  namespace: uat
