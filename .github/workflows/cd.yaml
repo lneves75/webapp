@@ -9,7 +9,7 @@ on:
 
 jobs:
   trigger-deployment:
-    uses: lneves75/gh-workflows/.github/workflows/deployment.yaml@test-ci
+    uses: lneves75/gh-workflows/.github/workflows/deployment.yaml@0c495aa7ca28ab461578cb0ffa32174eb004c433
     with:
       service: 'webapp'
       tag: ${{ github.ref_name }}
