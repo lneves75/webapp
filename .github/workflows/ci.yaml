@@ -34,6 +34,7 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   add-label:
+    needs: build-image
     runs-on: ubuntu-latest
     steps:
       - name: Add built label
@@ -45,12 +46,12 @@ jobs:
   # From this point on we determine which environments have Continuous Deployment
   # First we determine the tag suffix we want to use. In this case it's a sequential number based on the
   # github run number and attempt
-  prepare-tags:
+  get-version:
     if: contains('push', github.event_name)
     needs: build-image
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.number }}
+      number: ${{ steps.version.outputs.number }}
     steps:
       - name: Get version
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -60,14 +61,14 @@ jobs:
 
   create-tags:
     if: contains('push', github.event_name)
-    needs: [git, prepare-tags]
+    needs: [git, get-version]
     uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@2d513c57ac287b5b4afdd28a81f81ab1c3b54262
     permissions:
       contents: write
     with:
       service: 'webapp'
       environment: '["staging"]'
-      version: ${{ needs.prepare-tags.outputs.version }}
+      version: ${{ needs.get-version.outputs.number }}
       ref: ${{ needs.git.outputs.ref }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
