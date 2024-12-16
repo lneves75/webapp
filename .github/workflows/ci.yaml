@@ -4,63 +4,69 @@ on:
   push:
     branches:
       - master
-  pull_request: 
-
-env:
-  APP: webapp
+  pull_request:
 
 jobs:
 
-  build:
+  git:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: write
-
+    outputs:
+      ref: ${{ steps.git.outputs.ref }}
     steps:
-      - name: Get image tag
-        id: image
+      - name: Get ref
+        id: git
         run: |
           if [ "${{ github.event_name }}" != 'push' ]; then
-            echo "tag=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+            echo "ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
           else
-            echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "ref=${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.image.outputs.tag }}
+  build-image:
+    name: Build Image
+    needs: git
+    uses: lneves75/gh-workflows/.github/workflows/build-image.yaml@test-ci
+    with:
+      name: 'webapp'
+      ref: ${{ needs.git.outputs.ref }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker login
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-
-      - name: Build image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          build-args:
-           COMMIT_HASH=${{ steps.image.outputs.tag }}
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ steps.image.outputs.tag }}
-
+  add-label:
+    runs-on: ubuntu-latest
+    steps:
       - name: Add built label
         if: contains('pull_request', github.event_name)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr edit $(dirname ${{ github.ref_name }}) --add-label "built"
 
-      - name: Get tag number
-        id: tag
+  # From this point on we determine which environments have Continuous Deployment
+  # First we determine the tag suffix we want to use. In this case it's a sequential number based on the
+  # github run number and attempt
+  prepare-tags:
+    if: contains('push', github.event_name)
+    needs: build-image
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.environment.outputs.tag }}
+    steps:
+      - name: Get version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        id: version
         run: |
           echo "number=$((${{ github.run_number }}+${{ github.run_attempt }}-1))" >> $GITHUB_OUTPUT
 
-      # here we should configure which tags are automatically created when we push to the default branch
-      - name: Create tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITOPS_TOKEN }}
-          tag_prefix: staging-
-          custom_tag: ${{ steps.tag.outputs.number }}
+  create-tags:
+    if: contains('push', github.event_name)
+    needs: [git, prepare-tags]
+    uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@test-ci
+    with:
+      service: 'webapp'
+      environment: '["staging"]'
+      version: ${{ needs.prepare-tags.outputs.version }}
+      ref: ${{ needs.git.outputs.ref }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
