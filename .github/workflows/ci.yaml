@@ -62,7 +62,7 @@ jobs:
   create-tags:
     if: contains('push', github.event_name)
     needs: [git, get-version]
-    uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@2d513c57ac287b5b4afdd28a81f81ab1c3b54262
+    uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@test-ci
     permissions:
       contents: write
     with:
@@ -71,5 +71,6 @@ jobs:
       version: ${{ needs.get-version.outputs.number }}
       ref: ${{ needs.git.outputs.ref }}
     secrets:
+      token: ${{ secrets.GITOPS_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
