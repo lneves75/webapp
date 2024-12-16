@@ -62,6 +62,8 @@ jobs:
     if: contains('push', github.event_name)
     needs: [git, prepare-tags]
     uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@test-ci
+    permissions:
+      contents: write
     with:
       service: 'webapp'
       environment: '["staging"]'
