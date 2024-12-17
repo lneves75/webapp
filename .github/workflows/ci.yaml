@@ -25,7 +25,7 @@ jobs:
   build-image:
     name: Build Image
     needs: git
-    uses: lneves75/gh-workflows/.github/workflows/build-image.yaml@test-ci
+    uses: lneves75/gh-workflows/.github/workflows/build-image.yaml@master
     with:
       name: 'webapp'
       ref: ${{ needs.git.outputs.ref }}
@@ -62,7 +62,7 @@ jobs:
   create-tags:
     if: contains('push', github.event_name)
     needs: [git, get-version]
-    uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@test-ci
+    uses: lneves75/gh-workflows/.github/workflows/create-tag.yaml@master
     permissions:
       contents: write
     with:
