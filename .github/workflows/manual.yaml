@@ -1,0 +1,13 @@
+name: Manual Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trigger-deployment:
+    uses: lneves75/gh-workflows/.github/workflows/build-image.yaml@build-args
+    with:
+      name: 'webapp'
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
